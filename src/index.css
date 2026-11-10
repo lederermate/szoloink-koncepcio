@@ -1,0 +1,71 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/inter';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  /* Márkaszín: a szoloink.hu lila árnyalata (#4b2e83), modern skálán */
+  --color-vine-50: oklch(97.5% 0.015 300);
+  --color-vine-100: oklch(94.5% 0.035 300);
+  --color-vine-200: oklch(89% 0.065 300);
+  --color-vine-300: oklch(81% 0.1 300);
+  --color-vine-400: oklch(71% 0.14 300);
+  --color-vine-500: oklch(60% 0.17 298);
+  --color-vine-600: oklch(51% 0.17 296);
+  --color-vine-700: oklch(43% 0.15 295);
+  --color-vine-800: oklch(37% 0.13 295);
+  --color-vine-900: oklch(30% 0.1 295);
+  --color-vine-950: oklch(22% 0.07 295);
+  /* Levélzöld: csak állapotjelzésre (engedélyezett, szüretelhető, készlet ok) */
+  --color-leaf-50: oklch(97% 0.03 145);
+  --color-leaf-100: oklch(94% 0.06 145);
+  --color-leaf-200: oklch(88% 0.1 145);
+  --color-leaf-600: oklch(55% 0.14 150);
+  --color-leaf-700: oklch(47% 0.12 150);
+  --color-leaf-800: oklch(39% 0.1 150);
+  --color-leaf-900: oklch(30% 0.07 150);
+  --color-grape-500: oklch(52% 0.15 350);
+  --color-grape-600: oklch(45% 0.14 352);
+  --color-grape-700: oklch(38% 0.12 354);
+}
+
+:root {
+  --bg: oklch(98.4% 0.005 300);
+  --surface: #ffffff;
+  --surface-2: oklch(96.6% 0.008 300);
+  --border: oklch(91.5% 0.012 300);
+  --text: oklch(22% 0.03 295);
+  --muted: oklch(50% 0.025 295);
+  color-scheme: light;
+}
+.dark {
+  --bg: oklch(16.5% 0.015 295);
+  --surface: oklch(20.5% 0.02 295);
+  --surface-2: oklch(24.5% 0.022 295);
+  --border: oklch(30.5% 0.025 295);
+  --text: oklch(95% 0.01 300);
+  --muted: oklch(71% 0.025 300);
+  color-scheme: dark;
+}
+
+@utility bg-app { background-color: var(--bg); }
+@utility bg-surface { background-color: var(--surface); }
+@utility bg-surface-2 { background-color: var(--surface-2); }
+@utility border-line { border-color: var(--border); }
+@utility text-fg { color: var(--text); }
+@utility text-muted { color: var(--muted); }
+@utility divide-line { & > :not(:last-child) { border-color: var(--border); } }
+
+html, body, #root { height: 100%; }
+body {
+  @apply bg-app text-fg antialiased;
+  font-feature-settings: 'cv11', 'ss01', 'tnum';
+}
+input, select, textarea { font: inherit; }
+
+@media print {
+  .no-print { display: none !important; }
+  body { background: white; color: black; }
+  .print-area { padding: 0 !important; margin: 0 !important; box-shadow: none !important; border: 0 !important; }
+}
