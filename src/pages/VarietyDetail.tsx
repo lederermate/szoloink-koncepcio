@@ -11,6 +11,7 @@ import { d, n } from '../lib/format'
 import { GrapeArt, RipeningBar } from '../components/Grape'
 import { Badge, Button, Card, CardHeader, Empty, Segmented, Spinner, cx } from '../components/ui'
 import { VarietyModal } from './Varieties'
+import { AddToList, CollectionToggle } from '../components/GardenActions'
 import type { Product, Variety } from '../../shared/types'
 
 type Tab = 'leiras' | 'vedelem' | 'tortenet'
@@ -41,9 +42,11 @@ export default function VarietyDetail() {
                 <h1 className="text-3xl font-semibold tracking-tight">{v.name}</h1>
                 {others.length > 0 && <p className="text-muted mt-1">{others.join(' · ')}</p>}
               </div>
-              <div className="flex gap-2">
-                <Link to={`/szoloim?uj=${encodeURIComponent(v.name)}`}><Button icon={<Plus className="size-4" />}>Kertembe</Button></Link>
-                <Button variant="secondary" icon={<Pencil className="size-4" />} onClick={() => setEdit(true)}>Szerkesztés</Button>
+              <div className="flex flex-wrap gap-2">
+                <CollectionToggle v={v} />
+                <AddToList v={v} />
+                <Link to={`/ultetvenyek?uj=${encodeURIComponent(v.name)}`} title="Új ültetvény ezzel a fajtával"><Button variant="secondary" icon={<Plus className="size-4" />}>Ültetvénybe</Button></Link>
+                <Button variant="ghost" icon={<Pencil className="size-4" />} onClick={() => setEdit(true)} aria-label="Fajta szerkesztése" title="Fajta szerkesztése" />
               </div>
             </div>
             <div className="flex flex-wrap gap-1.5">
@@ -119,13 +122,19 @@ function Description({ v }: { v: Variety }) {
         <Card>
           <CardHeader title="Kik termesztik" subtitle="Minta — gazdák a közösségből" icon={<Users className="size-5" />} />
           <ul className="px-5 pb-4 flex flex-col gap-2.5">
-            {USERS.slice(0, 3 + (v.id % 2)).map((u) => (
-              <li key={u.name} className="flex items-center gap-2.5 text-sm">
-                <span className="grid size-8 place-items-center rounded-full text-[11px] font-semibold text-white" style={{ background: u.color }}>{u.initials}</span>
-                <span className="flex-1">{u.name}</span>
-                <span className="text-xs text-muted inline-flex items-center gap-1"><MapPin className="size-3" />{u.city}</span>
-              </li>
-            ))}
+            {(() => {
+              const growers = USERS.filter((u) => u.grapes?.some((g) => fold(g) === fold(v.name)))
+              return (growers.length ? growers : USERS.slice(0, 2)).map((u) => (
+                <li key={u.id}>
+                  <Link to={`/gazda/${u.id}`} className="flex items-center gap-2.5 text-sm hover:underline">
+                    <span className="grid size-8 place-items-center rounded-full text-[11px] font-semibold text-white" style={{ background: u.color }}>{u.initials}</span>
+                    <span className="flex-1">{u.name}</span>
+                    <span className="text-xs text-muted inline-flex items-center gap-1"><MapPin className="size-3" />{u.city}</span>
+                  </Link>
+                </li>
+              ))
+            })()}
+            <li><Link to="/gazdak" className="text-xs font-medium text-vine-700 dark:text-vine-300">Összes gazda →</Link></li>
           </ul>
         </Card>
       </div>
@@ -153,7 +162,7 @@ function Protection({ v }: { v: Variety }) {
     .filter((r) => r.uses.length)
     .sort((a, b) => (a.phi ?? 0) - (b.phi ?? 0))
   const ripeStart = v.ripening_from != null ? dayToDate(v.ripening_from) : null
-  const myParcels = parcels.filter((p) => fold(p.variety ?? '') === fold(v.name))
+  const myParcels = parcels.filter((p) => p.plantings.some((x) => fold(x.variety) === fold(v.name)))
   const mySprays = sprays.filter((s) => s.parcels.some((pp) => myParcels.some((m) => m.id === pp.parcel_id)))
   const prodName = (pid: number) => products.find((p) => p.id === pid)?.name ?? `#${pid}`
   const usable = (p: Product) => !(p.use_until ?? p.permit_valid_until) || (p.use_until ?? p.permit_valid_until)! >= new Date().toISOString().slice(0, 10)

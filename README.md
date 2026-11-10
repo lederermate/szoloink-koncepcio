@@ -33,8 +33,16 @@ A `dist-demo` tartalma a `gh-pages` ágra kerül; GitHub → Settings → Pages 
 | Fajtaadatlap → **Növényvédelem** fül: bor/csemege kultúrára engedélyezett szerek, ÉVI, „legkésőbbi permetezés” a várható érés alapján, saját kezelések | **működik – új** |
 | Permetezési napló, élő ellenőrzés, nyomtatható napló | **működik – új** |
 | Szeradatbázis + élő NÉBIH keresés és import | **működik – új** |
-| Kertem: parcellák (fajtához kötve), ÉVI/MVI-állapot, raktár, munkanapló, szüret | **működik** |
-| Főoldal eseményfolyam, cikkek, fórum, „kik termesztik”, verziótörténet, bejelentkezett felhasználó | statikus minta |
+| **Szőlőim** (saját fajtagyűjtemény, a szoloink.hu `myGrapes` megfelelője): kézzel felvett fajták megjegyzéssel + az ültetvényekben lévő fajták automatikusan | **működik** |
+| **Listáim** (a szoloink.hu `users/{uid}/lists` megfelelője): csere-/kívánság-/beszerzési listák, fajtánkénti megjegyzés, privát/nyilvános kapcsoló, megosztható link | **működik** |
+| **Ültetvényeim**: egy ültetvényen **több fajtablokk** (sorok, tőkeszám, alany, telepítés fajtánként); a fajták várható érése összevetve a várakozási idővel („ÉVI-ütközés” a korán érő fajtánál); szüret fajtánként | **működik – új** |
+| ÉVI/MVI-állapot, raktár, munkanapló, szüret | **működik** |
+| Profil és értesítési beállítások (név, település, bemutatkozás, elérhetőség, láthatóság) | **működik** (a saját gazdaprofil ebből épül) |
+| Gazdák (lista + térkép szűrőkkel), gazdaprofil „Szőlők (N féle)”, Üzenetek | minta-gazdákkal; az üzenetek nem kerülnek elküldésre |
+| Főoldal eseményfolyam, cikkek, fórum, verziótörténet | statikus minta |
+
+A bejelentkezés utáni szoloink.hu-oldalakat (Szőlőim, Listáim, Gazdák, Gazda, Üzenetek, Beállítás) a nyilvános
+programkódjuk alapján modelleztük — valós felhasználói adat nem került a koncepcióba.
 
 ## Funkciók részletesen (Kertem / napló)
 

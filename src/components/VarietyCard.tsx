@@ -17,7 +17,7 @@ export function VarietyCard({ v, mine }: { v: Variety; mine?: boolean }) {
               <h3 className="font-semibold leading-tight truncate group-hover:text-vine-700 dark:group-hover:text-vine-300">{v.name}</h3>
               <p className="text-xs text-muted truncate">{v.other_names || ' '}</p>
             </div>
-            {mine && <Badge tone="brand">kertemben</Badge>}
+            {mine && <Badge tone="brand">Szőlőim</Badge>}
           </div>
           <div className="mt-1.5 flex flex-wrap gap-1">
             {use && <Badge>{TAGS[use]?.name}</Badge>}

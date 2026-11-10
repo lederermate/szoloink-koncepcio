@@ -1,13 +1,61 @@
 // MINTAADATOK a koncepció közösségi felületeihez (eseményfolyam, cikkek, fórum).
 // Kitalált szereplők és szövegek — a valós rendszerben a szoloink.hu háttere adná.
 
-export interface MockUser { name: string; initials: string; color: string; city: string }
+export interface MockUser {
+  id: string
+  name: string
+  initials: string
+  color: string
+  city: string
+  lat?: number
+  lng?: number
+  about?: string
+  contact?: string
+  grapes?: string[] // fajtanevek a katalógusból
+  since?: string
+  online?: boolean
+}
 export const USERS: MockUser[] = [
-  { name: 'Kertész Anna', initials: 'KA', color: '#7c3aed', city: 'Kecskemét' },
-  { name: 'Szabó Péter', initials: 'SzP', color: '#0e7490', city: 'Eger' },
-  { name: 'Tóth Gábor', initials: 'TG', color: '#c2410c', city: 'Pécs' },
-  { name: 'Nagy Eszter', initials: 'NE', color: '#be185d', city: 'Győr' },
-  { name: 'Minta Gazda', initials: 'MG', color: '#4b2e83', city: 'Badacsonytomaj' },
+  { id: 'kertesz-anna', name: 'Kertész Anna', initials: 'KA', color: '#7c3aed', city: 'Kecskemét', lat: 46.906, lng: 19.691, since: '2022', online: true,
+    about: 'Homoki kiskert, 60 tő csemegeszőlő. Főleg rezisztens és magvatlan fajták érdekelnek.', contact: 'Üzenetben vagy a kecskeméti piacon szombatonként',
+    grapes: ['Muscat bleu', 'Kodrjanka', 'Velesz', 'Bianca', 'Nero', 'Kismis Lucsisztij', 'Lívia', 'Arkadia'] },
+  { id: 'szabo-peter', name: 'Szabó Péter', initials: 'SzP', color: '#0e7490', city: 'Eger', lat: 47.902, lng: 20.377, since: '2021',
+    about: 'Borászként kezdtem, ma inkább a régi magyar csemegefajták gyűjtése a hobbim.', grapes: ['Csabagyöngye', 'Pölöskei muskotály', 'Zala gyöngye', 'Kékfrankos', 'Moldova'] },
+  { id: 'toth-gabor', name: 'Tóth Gábor', initials: 'TG', color: '#c2410c', city: 'Pécs', lat: 46.072, lng: 18.233, since: '2023', online: true,
+    about: 'Mecsek-oldali teraszos kert, kísérletezem a gibberellines kezeléssel.', contact: '+36 30 *** ** 12', grapes: ['Kodrjanka', 'Talizman', 'Arkadia', 'Preobrazsenyije', 'Moldova'] },
+  { id: 'nagy-eszter', name: 'Nagy Eszter', initials: 'NE', color: '#be185d', city: 'Győr', lat: 47.687, lng: 17.65, since: '2025',
+    about: 'Kezdő vagyok, 30 tőkés kiskertem van, főleg korai csemegefajtákkal.', grapes: ['Csabagyöngye', 'Palatina', 'Lívia'] },
+  { id: 'minta-gazda', name: 'Minta Gazda', initials: 'MG', color: '#4b2e83', city: 'Badacsonytomaj', lat: 46.808, lng: 17.508, since: '2024' },
+  { id: 'kovacs-ildiko', name: 'Kovács Ildikó', initials: 'KI', color: '#15803d', city: 'Szeged', lat: 46.253, lng: 20.141, since: '2022', online: true,
+    about: 'Vesszőcserében mindig benne vagyok, főleg orosz és ukrán nemesítésű fajták.', contact: 'Üzenetben', grapes: ['Velesz', 'Talizman', 'Preobrazsenyije', 'Kismis Lucsisztij', 'Arkadia', 'Moldova', 'Kodrjanka'] },
+  { id: 'farkas-bence', name: 'Farkas Bence', initials: 'FB', color: '#b45309', city: 'Tokaj', lat: 48.121, lng: 21.41, since: '2020',
+    about: 'Családi pincészet, Furmint és Hárslevelű. A szőlőskertbe csemegének a Királynő került.', grapes: ['Furmint', 'Szőlőskertek királynője muskotály', 'Irsai Olivér'] },
+  { id: 'balogh-reka', name: 'Balogh Réka', initials: 'BR', color: '#0369a1', city: 'Debrecen', lat: 47.531, lng: 21.627, since: '2024',
+    about: 'Lugas a kertben, permetezés nélkül szeretném megoldani.', grapes: ['Muscat bleu', 'Bianca', 'Nero', 'Izabella'] },
+  { id: 'molnar-laszlo', name: 'Molnár László', initials: 'ML', color: '#6d28d9', city: 'Kiskőrös', lat: 46.62, lng: 19.285, since: '2019',
+    about: 'Kunsági homok, 2 ha bor- és csemegeszőlő.', contact: 'Hétvégén telefonon', grapes: ['Kunleány', 'Irsai Olivér', 'Kékfrankos', 'Csabagyöngye', 'Pölöskei muskotály'] },
+  { id: 'varga-zsofia', name: 'Varga Zsófia', initials: 'VZs', color: '#db2777', city: 'Budapest XXII.', lat: 47.425, lng: 19.03, since: '2025', grapes: ['Lívia', 'Palatina', 'Muscat bleu'] },
+  { id: 'horvath-mate', name: 'Horváth Máté', initials: 'HM', color: '#475569', city: 'Szekszárd', lat: 46.35, lng: 18.704, since: '2023', grapes: ['Kékfrankos', 'Cabernet Sauvignon', 'Bianca'] },
+  { id: 'papp-gyula', name: 'Papp Gyula', initials: 'PGy', color: '#a16207', city: 'Nyíregyháza', since: '2021', about: 'Helyet nem adtam meg — a listában így is megtalálható vagyok.', grapes: ['Moldova', 'Nero'] },
+]
+export const ME = USERS[4]
+export const userById = (id: string | undefined) => USERS.find((u) => u.id === id)
+
+/** Minta üzenetváltások az Üzenetek oldalhoz (csak a böngészőben élnek). */
+export interface MockMessage { from: 'me' | 'them'; text: string; at: string }
+export const CONVERSATIONS: { with: string; unread?: number; messages: MockMessage[] }[] = [
+  { with: 'kertesz-anna', unread: 1, messages: [
+    { from: 'them', text: 'Szia! Láttam a cserelistádon a Pölöskei muskotályt. Kodrjankát tudnék adni érte, 3 vesszőt.', at: '2026-11-09 18:12' },
+    { from: 'me', text: 'Szia Anna! Jó lenne, a metszésnél, február végén tudom szedni. Hány vesszőt kérnél?', at: '2026-11-09 19:40' },
+    { from: 'them', text: 'Hármat-hármat cserélhetnénk. Postán vagy személyesen? Márciusban Balatonon leszünk.', at: '2026-11-10 08:05' },
+  ] },
+  { with: 'kovacs-ildiko', unread: 1, messages: [
+    { from: 'them', text: 'Szia! A Velesz nálam idén is szépen beérett augusztus elejére. Ha kell vessző, szólj!', at: '2026-11-08 10:30' },
+  ] },
+  { with: 'toth-gabor', messages: [
+    { from: 'me', text: 'Szia Gábor! Milyen koncentrációval csináltad a gibberellines kezelést a Kodrjankán?', at: '2026-10-28 20:02' },
+    { from: 'them', text: 'Virágzás előtt 20 ppm, kötődés után még egyszer 40 ppm. A fórumon le is írtam részletesen.', at: '2026-10-29 07:45' },
+  ] },
 ]
 
 export type EventKind = 'forum' | 'variety' | 'edit' | 'article' | 'spray'

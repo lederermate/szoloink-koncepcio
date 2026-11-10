@@ -2,9 +2,9 @@ import { ChevronDown, Search as SearchIcon, SlidersHorizontal, Tag, X } from 'lu
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { TAG_CATEGORIES, TAGS } from '../../shared/tags'
-import { useParcels } from '../lib/api'
 import { BERRY, fold, matchScore, useVarieties } from '../lib/varieties'
 import { VarietyCard } from '../components/VarietyCard'
+import { useMyVarieties } from '../lib/garden'
 import { Badge, Card, Empty, Input, PageHeader, Segmented, Select, Spinner, cx } from '../components/ui'
 
 type Sort = 'pop' | 'name' | 'ripe'
@@ -17,7 +17,6 @@ const RIPE = [
 
 export default function Search() {
   const { data: varieties, isLoading } = useVarieties()
-  const { data: parcels = [] } = useParcels()
   const [sp, setSp] = useSearchParams()
   const [mode, setMode] = useState<Mode>('tags')
   const [sort, setSort] = useState<Sort>('pop')
@@ -27,7 +26,7 @@ export default function Search() {
   const q = sp.get('q') ?? ''
   const tags = sp.get('cimke')?.split(',').filter(Boolean) ?? []
   const text = sp.get('szoveg') ?? ''
-  const mine = new Set(parcels.map((p) => fold(p.variety ?? '')))
+  const { ids: mine } = useMyVarieties()
 
   const update = (k: string, v: string) => {
     const n = new URLSearchParams(sp)
@@ -150,7 +149,7 @@ export default function Search() {
             <Card><Empty icon={<SearchIcon />} title="Nincs találat" text="Próbáljon kevesebb címkét, vagy más írásmódot — a névkeresés elírástűrő." /></Card>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">
-              {results.map(({ v }) => <VarietyCard key={v.id} v={v} mine={mine.has(fold(v.name))} />)}
+              {results.map(({ v }) => <VarietyCard key={v.id} v={v} mine={mine.has(v.id)} />)}
             </div>
           )}
         </div>

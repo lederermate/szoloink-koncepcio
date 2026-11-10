@@ -5,7 +5,12 @@ import { api, useHarvests, useParcelStatus, useParcels, useProducts, useSave, us
 import { d, daysUntil, huf, n } from '../lib/format'
 import { Badge, Button, Card, CardHeader, Empty, Segmented, Spinner, cx } from '../components/ui'
 import { ParcelModal } from './Parcels'
-import { fold, useVarieties } from '../lib/varieties'
+import { BERRY, dayToDate, ripeningLabel, useVarieties } from '../lib/varieties'
+import { findVariety } from '../lib/garden'
+import type { Planting } from '../../shared/types'
+
+/** A katalógus érési dátumát (évfüggetlen) a várakozási idő évére vetíti. */
+const inYear = (date: Date, ref: string) => new Date(Number(ref.slice(0, 4)), date.getMonth(), date.getDate())
 
 type Kind = 'all' | 'spray' | 'work' | 'harvest'
 
@@ -25,10 +30,19 @@ export default function ParcelDetail() {
 
   const p = parcels?.find((x) => x.id === id)
   if (!parcels) return <Spinner />
-  if (!p) return <Empty icon={<Grape />} title="Az ültetvény nem található" action={<Link to="/szoloim">Vissza</Link>} />
+  if (!p) return <Empty icon={<Grape />} title="Az ültetvény nem található" action={<Link to="/ultetvenyek">Vissza</Link>} />
   const st = status.find((s) => s.parcel_id === id)
   const phi = daysUntil(st?.harvest_allowed_from)
   const prod = (pid: number) => products.find((x) => x.id === pid)
+  // Fajtablokkok érés szerint, a várható érés és az ÉVI lejárta összevetve
+  const plantRows = (pl: Planting[]) =>
+    pl
+      .map((x) => {
+        const v = findVariety(varieties, x.variety)
+        const ripe = v?.ripening_from != null && st?.harvest_allowed_from ? inYear(dayToDate(v.ripening_from), st.harvest_allowed_from) : null
+        return { x, v, ripe, clash: !!ripe && ripe < new Date(st!.harvest_allowed_from!) }
+      })
+      .sort((a, b) => (a.v?.ripening_from ?? 999) - (b.v?.ripening_from ?? 999))
 
   const events = [
     ...sprays.map((s) => ({ kind: 'spray' as const, date: s.date, key: `s${s.id}`, s })),
@@ -40,8 +54,8 @@ export default function ParcelDetail() {
 
   return (
     <>
-      <Link to="/szoloim" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-fg mb-4">
-        <ArrowLeft className="size-4" /> Szőlőim
+      <Link to="/ultetvenyek" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-fg mb-4">
+        <ArrowLeft className="size-4" /> Ültetvényeim
       </Link>
 
       <Card className="overflow-hidden mb-6">
@@ -49,7 +63,7 @@ export default function ParcelDetail() {
         <div className="p-5 sm:p-6 flex flex-col sm:flex-row gap-4 sm:items-start sm:justify-between">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">{p.name}</h1>
-            <p className="text-sm text-muted mt-1">{[p.location, p.hrsz && `hrsz. ${p.hrsz}`, p.variety, p.rootstock && `alany: ${p.rootstock}`].filter(Boolean).join(' · ')}</p>
+            <p className="text-sm text-muted mt-1">{[p.location, p.hrsz && `hrsz. ${p.hrsz}`, p.plantings.length > 1 ? `${p.plantings.length} fajta` : p.variety, p.rootstock && `alany: ${p.rootstock}`].filter(Boolean).join(' · ')}</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {phi != null && phi > 0 ? (
                 <Badge tone="red"><ShieldAlert className="size-3" /> Élelmezés-egészségügyi várakozási idő: még {phi} nap ({d(st?.harvest_allowed_from)})</Badge>
@@ -59,16 +73,13 @@ export default function ParcelDetail() {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            {varieties.find((v) => fold(v.name) === fold(p.variety ?? '')) && (
-              <Link to={`/szolo/${varieties.find((v) => fold(v.name) === fold(p.variety ?? ''))!.id}`}><Button variant="secondary" icon={<Grape className="size-4" />}>{p.variety} adatlap</Button></Link>
-            )}
             <Link to={`/permetezes/uj?parcel=${p.id}`}><Button icon={<SprayCan className="size-4" />}>Permetezés</Button></Link>
             <Button variant="secondary" icon={<Pencil className="size-4" />} onClick={() => setEdit(true)}>Szerkesztés</Button>
             <Button
               variant="ghost"
               icon={<Trash2 className="size-4" />}
               aria-label="Törlés"
-              onClick={() => confirm(`Biztosan törli: ${p.name}? A hozzá tartozó bejegyzések is törlődnek.`) && del.mutate(undefined, { onSuccess: () => nav('/szoloim') })}
+              onClick={() => confirm(`Biztosan törli: ${p.name}? A hozzá tartozó bejegyzések is törlődnek.`) && del.mutate(undefined, { onSuccess: () => nav('/ultetvenyek') })}
             />
           </div>
         </div>
@@ -86,6 +97,67 @@ export default function ParcelDetail() {
             </div>
           ))}
         </dl>
+      </Card>
+
+      <Card className="mb-6">
+        <CardHeader
+          title="Fajták az ültetvényen"
+          subtitle="A permetezés az egész ültetvényre vonatkozik — a várakozási időt a legkorábban érő fajtához kell igazítani."
+          icon={<Grape className="size-5" />}
+        />
+        {p.plantings.length === 0 ? (
+          <Empty icon={<Grape />} title="Nincs fajta megadva" action={<Button variant="secondary" onClick={() => setEdit(true)}>Fajták felvétele</Button>} />
+        ) : (
+          <>
+          <ul className="sm:hidden divide-y divide-line border-t border-line">
+            {plantRows(p.plantings).map(({ x, v, ripe, clash }) => (
+              <li key={x.variety} className="px-5 py-3 text-sm">
+                <div className="flex items-start justify-between gap-2">
+                  {v ? <Link to={`/szolo/${v.id}`} className="font-medium inline-flex items-center gap-2"><span className="size-2.5 rounded-full" style={{ background: BERRY[v.berry_color]?.fill }} />{x.variety}</Link> : <span className="font-medium">{x.variety}</span>}
+                  {clash ? <Badge tone="red"><ShieldAlert className="size-3" /> ÉVI-ütközés</Badge> : ripe ? <Badge tone="green"><ShieldCheck className="size-3" /> rendben</Badge> : null}
+                </div>
+                <div className="mt-1 text-xs text-muted">
+                  {[x.rows, x.vine_count != null && `${n(x.vine_count, 0)} tő`, x.rootstock, x.planted_year, v?.ripening_from != null && `érés: ${ripeningLabel(v)}`].filter(Boolean).join(' · ')}
+                </div>
+                {clash && <div className="mt-1 text-xs text-red-700 dark:text-red-300">Érés ~{d(ripe!.toISOString().slice(0, 10), 'MMM d.')}, de a várakozási idő {d(st!.harvest_allowed_from, 'MMM d.')}-ig tart.</div>}
+              </li>
+            ))}
+          </ul>
+          <div className="hidden sm:block overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-xs text-muted text-left">
+                <tr className="border-y border-line">
+                  {['Fajta', 'Sorok / hely', 'Tőke', 'Alany', 'Telepítés', 'Várható érés', 'Várakozási idő'].map((h) => <th key={h} className="px-5 py-2 font-medium whitespace-nowrap">{h}</th>)}
+                </tr>
+              </thead>
+              <tbody>
+                {plantRows(p.plantings).map(({ x, v, ripe, clash }) => {
+                    return (
+                      <tr key={x.variety} className="border-b border-line last:border-0">
+                        <td className="px-5 py-2.5 font-medium whitespace-nowrap">
+                          {v ? <Link to={`/szolo/${v.id}`} className="inline-flex items-center gap-2 hover:text-vine-700 dark:hover:text-vine-300"><span className="size-2.5 rounded-full" style={{ background: BERRY[v.berry_color]?.fill }} />{x.variety}</Link> : x.variety}
+                          {x.notes && <div className="text-xs text-muted font-normal">{x.notes}</div>}
+                        </td>
+                        <td className="px-5 py-2.5 text-muted whitespace-nowrap">{x.rows ?? '—'}</td>
+                        <td className="px-5 py-2.5 tabular-nums">{x.vine_count != null ? n(x.vine_count, 0) : '—'}</td>
+                        <td className="px-5 py-2.5 whitespace-nowrap">{x.rootstock ?? '—'}</td>
+                        <td className="px-5 py-2.5">{x.planted_year ?? '—'}</td>
+                        <td className="px-5 py-2.5 whitespace-nowrap">{v?.ripening_from != null ? ripeningLabel(v) : <span className="text-muted">nincs adat</span>}</td>
+                        <td className="px-5 py-2.5">
+                          {clash ? (
+                            <Badge tone="red"><ShieldAlert className="size-3" /> érés ~{d(ripe!.toISOString().slice(0, 10), 'MMM d.')}, ÉVI {d(st!.harvest_allowed_from, 'MMM d.')}-ig</Badge>
+                          ) : ripe ? (
+                            <Badge tone="green"><ShieldCheck className="size-3" /> rendben</Badge>
+                          ) : <span className="text-xs text-muted">—</span>}
+                        </td>
+                      </tr>
+                    )
+                  })}
+              </tbody>
+            </table>
+          </div>
+          </>
+        )}
       </Card>
 
       <Card>

@@ -11,7 +11,7 @@ import nebihSnapshot from './nebih-products.json'
 import { wrapSqlJs } from './sqljs-db'
 import type { Product } from '../../shared/types'
 
-const KEY = 'szoloink-demo-db-v1'
+const KEY = 'szoloink-demo-db-v2'
 const NEBIH_URL = 'https://novenyvedoszer.nebih.gov.hu/Engedelykereso/kereso'
 const OFFLINE = 'A böngészős demóban az élő NÉBIH-keresés nem elérhető (a NÉBIH oldala nem engedi a böngészőből való lekérést). A szerveres változatban működik — a demó 14 előre importált, valós NÉBIH-szert tartalmaz.'
 

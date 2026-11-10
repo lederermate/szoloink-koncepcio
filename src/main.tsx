@@ -21,6 +21,9 @@ import Search from './pages/Search'
 import Varieties from './pages/Varieties'
 import VarietyDetail from './pages/VarietyDetail'
 import { ArticlePage, Articles, Forum, ForumCategory, ForumThread, Help } from './pages/Community'
+import Collection from './pages/Collection'
+import { ListDetail, Lists, PublicList } from './pages/Lists'
+import Messages from './pages/Messages'
 
 try {
   const t = localStorage.getItem('theme')
@@ -45,8 +48,15 @@ const router = (DEMO ? createHashRouter : createBrowserRouter)([
       { path: '/forum/:cat/:id', element: <ForumThread /> },
       { path: '/segitseg', element: <Help /> },
       { path: '/kertem', element: <Dashboard /> },
-      { path: '/szoloim', element: <Parcels /> },
-      { path: '/szoloim/:id', element: <ParcelDetail /> },
+      { path: '/szoloim', element: <Collection /> },
+      { path: '/listaim', element: <Lists /> },
+      { path: '/listaim/:id', element: <ListDetail /> },
+      { path: '/lista/:id', element: <PublicList /> },
+      { path: '/gazdak', lazy: () => import('./pages/Growers').then((m) => ({ Component: m.Growers })) },
+      { path: '/gazda/:id', lazy: () => import('./pages/Growers').then((m) => ({ Component: m.GrowerProfile })) },
+      { path: '/uzenetek', element: <Messages /> },
+      { path: '/ultetvenyek', element: <Parcels /> },
+      { path: '/ultetvenyek/:id', element: <ParcelDetail /> },
       { path: '/permetezes', element: <Sprays /> },
       { path: '/permetezes/uj', element: <SprayForm /> },
       { path: '/permetezes/:id', element: <SprayForm /> },

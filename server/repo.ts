@@ -1,5 +1,8 @@
 import type { Db } from './schema.ts'
 import type {
+  CollectionItem,
+  GrapeList,
+  GrapeListItem,
   Harvest,
   Parcel,
   Product,
@@ -14,12 +17,12 @@ type Row = Record<string, any>
 
 // ---------- Ültetvények ----------
 export const PARCEL_FIELDS = [
-  'name', 'hrsz', 'location', 'area_ha', 'variety', 'rootstock', 'planted_year',
+  'name', 'hrsz', 'location', 'area_ha', 'plantings', 'variety', 'rootstock', 'planted_year',
   'row_spacing_m', 'vine_spacing_m', 'vine_count', 'training_system', 'color', 'notes',
 ] as const
 
 export const WORK_FIELDS = ['parcel_id', 'date', 'type', 'hours', 'workers', 'cost_huf', 'notes'] as const
-export const HARVEST_FIELDS = ['parcel_id', 'date', 'quantity_kg', 'must_degree', 'buyer', 'notes'] as const
+export const HARVEST_FIELDS = ['parcel_id', 'date', 'variety', 'quantity_kg', 'must_degree', 'buyer', 'notes'] as const
 
 /** Egyszerű CRUD a lapos táblákhoz. */
 export function crud<T>(db: Db, table: string, fields: readonly string[], orderBy = 'id DESC') {
@@ -47,7 +50,105 @@ export function crud<T>(db: Db, table: string, fields: readonly string[], orderB
   }
 }
 
-export const parcels = (db: Db) => crud<Parcel>(db, 'parcels', PARCEL_FIELDS, 'name COLLATE NOCASE')
+const uniq = <T>(a: T[]) => [...new Set(a)]
+
+/** Fajtablokkok → összegző oszlopok (variety, alany, telepítés, tőkeszám), hogy a listák/nyomtatás egyszerűek maradjanak. */
+function normParcel(data: Row): Row {
+  if (!Array.isArray(data.plantings)) {
+    // Régi, egyfajtás formátum → egy fajtablokk
+    if (data.variety === undefined) return data
+    data = { ...data, plantings: data.variety ? [{ variety: data.variety, rootstock: data.rootstock ?? null, planted_year: data.planted_year ?? null, vine_count: data.vine_count ?? null, rows: null, notes: null }] : [] }
+  }
+  const pl = (data.plantings as Row[]).filter((x) => x.variety?.trim())
+  const counts = pl.map((x) => x.vine_count)
+  const years = pl.map((x) => x.planted_year).filter((x): x is number => x != null)
+  return {
+    ...data,
+    plantings: JSON.stringify(pl),
+    variety: pl.length ? uniq(pl.map((x) => x.variety.trim())).join(', ') : null,
+    rootstock: uniq(pl.map((x) => x.rootstock).filter(Boolean)).join(', ') || null,
+    planted_year: years.length ? Math.min(...years) : null,
+    vine_count: pl.length && counts.every((c) => c != null) ? counts.reduce((a, b) => a + b, 0) : (data.vine_count ?? null),
+  }
+}
+
+function hydrateParcel(row: Row): Parcel {
+  let plantings = JSON.parse(row.plantings || '[]')
+  if (!plantings.length && row.variety)
+    plantings = [{ variety: row.variety, rootstock: row.rootstock, planted_year: row.planted_year, vine_count: row.vine_count, rows: null, notes: null }]
+  return { ...(row as Parcel), plantings }
+}
+
+export function parcels(db: Db) {
+  const c = crud<Row>(db, 'parcels', PARCEL_FIELDS, 'name COLLATE NOCASE')
+  return {
+    list: (where = '', params: any[] = []) => c.list(where, params).map(hydrateParcel),
+    get: (id: number) => {
+      const r = c.get(id)
+      return r && hydrateParcel(r)
+    },
+    create: (data: Row) => hydrateParcel(c.create(normParcel(data))),
+    update: (id: number, data: Row) => {
+      const r = c.update(id, normParcel(data))
+      return r && hydrateParcel(r)
+    },
+    remove: c.remove,
+  }
+}
+
+// ---------- Szőlőim (fajtagyűjtemény) és Listáim ----------
+export const listCollection = (db: Db): CollectionItem[] =>
+  db.prepare('SELECT variety_id, note, added_at FROM my_varieties ORDER BY added_at DESC').all() as CollectionItem[]
+
+export function setCollectionItem(db: Db, variety_id: number, note: string | null) {
+  if (!db.prepare('SELECT 1 FROM varieties WHERE id = ?').get(variety_id)) throw new HttpError(404, 'Ismeretlen fajta')
+  db.prepare('INSERT INTO my_varieties (variety_id, note) VALUES (?, ?) ON CONFLICT(variety_id) DO UPDATE SET note = excluded.note').run(variety_id, note)
+  return listCollection(db)
+}
+export const removeCollectionItem = (db: Db, variety_id: number) => {
+  db.prepare('DELETE FROM my_varieties WHERE variety_id = ?').run(variety_id)
+  return listCollection(db)
+}
+
+function hydrateList(db: Db, row: Row): GrapeList {
+  const items = db.prepare('SELECT variety_id, note FROM grape_list_items WHERE list_id = ? ORDER BY position, rowid').all(row.id) as GrapeListItem[]
+  return { ...(row as GrapeList), public: !!row.public, items }
+}
+export const listLists = (db: Db) => (db.prepare('SELECT * FROM grape_lists ORDER BY created_at DESC, id DESC').all() as Row[]).map((r) => hydrateList(db, r))
+export function getList(db: Db, id: number) {
+  const r = db.prepare('SELECT * FROM grape_lists WHERE id = ?').get(id) as Row | undefined
+  return r && hydrateList(db, r)
+}
+export function saveList(db: Db, data: { name?: string; description?: string | null; public?: boolean; items?: GrapeListItem[] }, id?: number): GrapeList {
+  if (id == null) {
+    const r = db.prepare('INSERT INTO grape_lists (name, description, public) VALUES (?, ?, ?)').run(data.name ?? 'Új lista', data.description ?? null, data.public ? 1 : 0)
+    id = Number(r.lastInsertRowid)
+  } else {
+    if (!getList(db, id)) throw new HttpError(404, 'Nem található')
+    for (const k of ['name', 'description', 'public'] as const)
+      if (data[k] !== undefined) db.prepare(`UPDATE grape_lists SET ${k} = ? WHERE id = ?`).run(k === 'public' ? (data.public ? 1 : 0) : data[k], id)
+  }
+  if (data.items) {
+    db.prepare('DELETE FROM grape_list_items WHERE list_id = ?').run(id)
+    const ins = db.prepare('INSERT OR IGNORE INTO grape_list_items (list_id, variety_id, note, position) VALUES (?, ?, ?, ?)')
+    data.items.forEach((it, i) => ins.run(id, it.variety_id, it.note ?? null, i))
+  }
+  return getList(db, id)!
+}
+export function setListItem(db: Db, id: number, variety_id: number, note: string | null) {
+  if (!getList(db, id)) throw new HttpError(404, 'Nem található')
+  const pos = db.prepare('SELECT COALESCE(MAX(position), -1) + 1 p FROM grape_list_items WHERE list_id = ?').get(id) as Row
+  db.prepare('INSERT INTO grape_list_items (list_id, variety_id, note, position) VALUES (?, ?, ?, ?) ON CONFLICT(list_id, variety_id) DO UPDATE SET note = excluded.note').run(id, variety_id, note, Number(pos.p))
+  return getList(db, id)!
+}
+export function removeListItem(db: Db, id: number, variety_id: number) {
+  db.prepare('DELETE FROM grape_list_items WHERE list_id = ? AND variety_id = ?').run(id, variety_id)
+  return found404(getList(db, id))
+}
+const found404 = <T>(x: T | undefined) => {
+  if (!x) throw new HttpError(404, 'Nem található')
+  return x
+}
 export const work = (db: Db) => crud<WorkEntry>(db, 'work_entries', WORK_FIELDS, 'date DESC, id DESC')
 export const harvests = (db: Db) => crud<Harvest>(db, 'harvests', HARVEST_FIELDS, 'date DESC, id DESC')
 

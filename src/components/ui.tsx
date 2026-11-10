@@ -40,8 +40,8 @@ export function Card({ className, children, ...p }: { className?: string; childr
 
 export function CardHeader({ title, subtitle, action, icon }: { title: ReactNode; subtitle?: ReactNode; action?: ReactNode; icon?: ReactNode }) {
   return (
-    <div className="flex items-start justify-between gap-3 px-5 pt-4 pb-3">
-      <div className="flex items-center gap-2.5 min-w-0">
+    <div className="flex flex-wrap items-start justify-between gap-3 px-5 pt-4 pb-3">
+      <div className="flex items-center gap-2.5 min-w-0 flex-1 basis-56">
         {icon && <div className="text-vine-600 dark:text-vine-400">{icon}</div>}
         <div className="min-w-0">
           <h3 className="font-semibold tracking-tight truncate">{title}</h3>

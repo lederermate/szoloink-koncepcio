@@ -34,10 +34,10 @@ export default function Dashboard() {
             title="Parcellák állapota"
             subtitle="Várakozási idők a legutóbbi kezelések alapján"
             icon={<CalendarClock className="size-5" />}
-            action={<Link to="/szoloim" className="text-sm text-vine-700 dark:text-vine-300 font-medium inline-flex items-center gap-1">Mind <ArrowRight className="size-3.5" /></Link>}
+            action={<Link to="/ultetvenyek" className="text-sm text-vine-700 dark:text-vine-300 font-medium inline-flex items-center gap-1">Mind <ArrowRight className="size-3.5" /></Link>}
           />
           {data.parcel_status.length === 0 ? (
-            <Empty icon={<Map />} title="Még nincs ültetvény" action={<Link className="text-vine-700 font-medium text-sm" to="/szoloim">Ültetvény felvétele</Link>} />
+            <Empty icon={<Map />} title="Még nincs ültetvény" action={<Link className="text-vine-700 font-medium text-sm" to="/ultetvenyek">Ültetvény felvétele</Link>} />
           ) : (
             <ul className="divide-y divide-line">
               {data.parcel_status.map((s) => {
@@ -46,7 +46,7 @@ export default function Dashboard() {
                 const rei = daysUntil(s.reentry_allowed_from)
                 return (
                   <li key={s.parcel_id}>
-                    <Link to={`/szoloim/${s.parcel_id}`} className="flex items-center gap-3 px-5 py-3 hover:bg-surface-2 transition">
+                    <Link to={`/ultetvenyek/${s.parcel_id}`} className="flex items-center gap-3 px-5 py-3 hover:bg-surface-2 transition">
                       <ColorDot color={p?.color ?? '#999'} />
                       <div className="min-w-0 flex-1">
                         <div className="font-medium truncate">{p?.name}</div>

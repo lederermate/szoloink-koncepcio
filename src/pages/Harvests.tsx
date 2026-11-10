@@ -35,7 +35,7 @@ export default function Harvests() {
                 <div className="w-24 shrink-0 text-sm font-medium">{d(h.date)}</div>
                 <div className="min-w-0 flex-1">
                   <span className="flex items-center gap-1.5 text-sm font-medium"><ColorDot color={pa(h.parcel_id)?.color ?? '#999'} />{pa(h.parcel_id)?.name}</span>
-                  <span className="text-xs text-muted">{pa(h.parcel_id)?.variety}{h.buyer ? ` · ${h.buyer}` : ''}</span>
+                  <span className="text-xs text-muted">{h.variety ?? pa(h.parcel_id)?.variety}{h.buyer ? ` · ${h.buyer}` : ''}</span>
                 </div>
                 <div className="text-right">
                   <div className="font-semibold tabular-nums">{n(h.quantity_kg, 0)} kg</div>
@@ -62,11 +62,28 @@ function HarvestModal({ value, onClose }: { value: Partial<Harvest> | null; onCl
   const num = (v: string) => (v === '' ? null : Number(v))
   const allowed = status.find((s) => s.parcel_id === f.parcel_id)?.harvest_allowed_from
   const blocked = !!(allowed && f.date && f.date < allowed)
+  const pl = parcels.find((p) => p.id === f.parcel_id)?.plantings ?? []
   return (
     <Modal open={!!value} onClose={onClose} title={f.id ? 'Szüret szerkesztése' : 'Új szüret'}
       footer={<>{save.error && <span className="mr-auto self-center text-sm text-red-600">{save.error.message}</span>}<Button variant="secondary" onClick={onClose}>Mégse</Button><Button loading={save.isPending} onClick={() => save.mutate(f, { onSuccess: onClose })}>Mentés</Button></>}>
       <div className="grid grid-cols-2 gap-4">
-        <Field label="Ültetvény" className="col-span-2"><Select value={f.parcel_id ?? ''} onChange={(e) => setF({ ...f, parcel_id: Number(e.target.value) })}>{parcels.map((p) => <option key={p.id} value={p.id}>{p.name} — {p.variety}</option>)}</Select></Field>
+        <Field label="Ültetvény" className={pl.length > 1 ? '' : 'col-span-2'}>
+          <Select value={f.parcel_id ?? ''} onChange={(e) => {
+            const np = parcels.find((p) => p.id === Number(e.target.value))
+            setF({ ...f, parcel_id: np?.id, variety: np?.plantings.length === 1 ? np.plantings[0].variety : null })
+          }}>
+            <option value="" disabled>Válasszon…</option>
+            {parcels.map((p) => <option key={p.id} value={p.id}>{p.name} — {p.variety}</option>)}
+          </Select>
+        </Field>
+        {pl.length > 1 && (
+          <Field label="Fajta">
+            <Select value={f.variety ?? ''} onChange={(e) => setF({ ...f, variety: e.target.value || null })}>
+              <option value="">Vegyes / mind</option>
+              {pl.map((x) => <option key={x.variety} value={x.variety}>{x.variety}</option>)}
+            </Select>
+          </Field>
+        )}
         <Field label="Dátum"><Input type="date" value={f.date ?? ''} onChange={(e) => setF({ ...f, date: e.target.value })} /></Field>
         <Field label="Mennyiség (kg)"><Input type="number" value={f.quantity_kg ?? ''} onChange={(e) => setF({ ...f, quantity_kg: Number(e.target.value) })} /></Field>
         {blocked && <p className="col-span-2 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950/40 dark:text-red-200">Figyelem: az élelmezés-egészségügyi várakozási idő csak {d(allowed)}-án jár le ezen az ültetvényen!</p>}

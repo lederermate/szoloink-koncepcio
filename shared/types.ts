@@ -1,11 +1,23 @@
 // Közös típusok a kliens és a szerver között.
 
+/** Egy fajta (fajtablokk) egy ültetvényen belül — egy parcellán több fajta is lehet. */
+export interface Planting {
+  variety: string
+  rootstock: string | null
+  planted_year: number | null
+  vine_count: number | null
+  rows: string | null // pl. „1–12. sor”
+  notes: string | null
+}
+
 export interface Parcel {
   id: number
   name: string
   hrsz: string | null // helyrajzi szám
   location: string | null
   area_ha: number
+  /** Fajtablokkok; a lenti variety/rootstock/planted_year/vine_count ezekből számolt összegzés. */
+  plantings: Planting[]
   variety: string | null
   rootstock: string | null
   planted_year: number | null
@@ -113,6 +125,7 @@ export interface Harvest {
   id: number
   parcel_id: number
   date: string
+  variety: string | null // vegyes ültetvénynél: melyik fajta termése
   quantity_kg: number
   must_degree: number | null // mustfok (MM°)
   buyer: string | null
@@ -204,4 +217,25 @@ export interface Variety {
   links: { label: string; url: string }[]
   popularity: number
   updated_at: string
+}
+
+/** „Szőlőim” — a saját fajtagyűjtemény kézzel felvett tagja (az ültetvényekben lévő fajták automatikusan bekerülnek). */
+export interface CollectionItem {
+  variety_id: number
+  note: string | null
+  added_at: string
+}
+
+export interface GrapeListItem {
+  variety_id: number
+  note: string | null
+}
+/** „Listáim” — saját fajtalisták (csere, kívánságlista, beszerzés…), nyilvánosra állítva megoszthatók. */
+export interface GrapeList {
+  id: number
+  name: string
+  description: string | null
+  public: boolean
+  created_at: string
+  items: GrapeListItem[]
 }

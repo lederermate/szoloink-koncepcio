@@ -15,10 +15,17 @@ const optNum = z.preprocess((v) => (v === '' || v === undefined ? null : v), z.c
 const optStr = z.preprocess((v) => (v === '' || v === undefined ? null : v), z.string().nullable())
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Dátum formátuma: ÉÉÉÉ-HH-NN')
 
+const PlantingSchema = z.object({
+  variety: z.string().trim().min(1, 'A fajta neve kötelező'),
+  rootstock: optStr, rows: optStr, notes: optStr,
+  planted_year: optNum.refine((v) => v == null || (v >= 1850 && v <= 2100), 'A telepítés éve 1850 és 2100 közé essen'),
+  vine_count: optNum.refine((v) => v == null || v >= 0, 'A tőkeszám nem lehet negatív'),
+})
 const ParcelSchema = z.object({
   name: z.string().min(1, 'Név kötelező'),
   hrsz: optStr, location: optStr,
   area_ha: num.positive('A terület legyen pozitív'),
+  plantings: z.array(PlantingSchema).optional(),
   variety: optStr, rootstock: optStr, planted_year: optNum,
   row_spacing_m: optNum, vine_spacing_m: optNum, vine_count: optNum,
   training_system: optStr, color: z.string().default('#65a30d'), notes: optStr,
@@ -28,7 +35,7 @@ const WorkSchema = z.object({
   hours: optNum, workers: optNum, cost_huf: optNum, notes: optStr,
 })
 const HarvestSchema = z.object({
-  parcel_id: num.int(), date, quantity_kg: num.nonnegative(),
+  parcel_id: num.int(), date, variety: optStr, quantity_kg: num.nonnegative(),
   must_degree: optNum, buyer: optStr, notes: optStr,
 })
 const UseSchema = z.object({
@@ -67,6 +74,13 @@ const VarietySchema = z.object({
   tags: z.array(z.string()).default([]), description: optStr,
   links: z.array(z.object({ label: z.string(), url: z.string().url() })).default([]),
 })
+const ListSchema = z.object({
+  name: z.string().trim().min(1, 'Név kötelező'),
+  description: optStr,
+  public: z.boolean().default(false),
+  items: z.array(z.object({ variety_id: num.int(), note: optStr })).optional(),
+})
+const NoteSchema = z.object({ note: optStr }).default({ note: null })
 
 export interface Ctx {
   params: Record<string, string>
@@ -98,7 +112,7 @@ const idOf = (c: Ctx) => {
   return n
 }
 
-export const BACKUP_TABLES = ['parcels', 'work_entries', 'products', 'product_uses', 'stock_movements', 'sprays', 'spray_parcels', 'spray_items', 'harvests', 'varieties', 'settings']
+export const BACKUP_TABLES = ['parcels', 'work_entries', 'products', 'product_uses', 'stock_movements', 'sprays', 'spray_parcels', 'spray_items', 'harvests', 'varieties', 'my_varieties', 'grape_lists', 'grape_list_items', 'settings']
 
 export function buildRoutes(db: Db, nebih: NebihApi): Route[] {
   const R: Route[] = []
@@ -137,6 +151,25 @@ export function buildRoutes(db: Db, nebih: NebihApi): Route[] {
     return saveVariety(VarietySchema.parse(c.body), idOf(c))
   })
   add('DELETE', '/varieties/:id', (c) => ({ ok: found(db.prepare('DELETE FROM varieties WHERE id = ?').run(idOf(c)).changes > 0) }))
+
+  // Szőlőim (saját fajtagyűjtemény)
+  const vidOf = (c: Ctx) => {
+    const n = Number(c.params.variety_id)
+    if (!Number.isInteger(n)) throw new HttpError(400, 'Hibás fajta-azonosító')
+    return n
+  }
+  add('GET', '/collection', () => repo.listCollection(db))
+  add('PUT', '/collection/:variety_id', (c) => repo.setCollectionItem(db, vidOf(c), NoteSchema.parse(c.body ?? {}).note))
+  add('DELETE', '/collection/:variety_id', (c) => repo.removeCollectionItem(db, vidOf(c)))
+
+  // Listáim
+  add('GET', '/lists', () => repo.listLists(db))
+  add('GET', '/lists/:id', (c) => found(repo.getList(db, idOf(c))))
+  add('POST', '/lists', (c) => repo.saveList(db, ListSchema.parse(c.body)), 201)
+  add('PUT', '/lists/:id', (c) => repo.saveList(db, ListSchema.partial().parse(c.body), idOf(c)))
+  add('DELETE', '/lists/:id', (c) => ({ ok: found(db.prepare('DELETE FROM grape_lists WHERE id = ?').run(idOf(c)).changes > 0) }))
+  add('PUT', '/lists/:id/items/:variety_id', (c) => repo.setListItem(db, idOf(c), vidOf(c), NoteSchema.parse(c.body ?? {}).note))
+  add('DELETE', '/lists/:id/items/:variety_id', (c) => repo.removeListItem(db, idOf(c), vidOf(c)))
 
   // Szerek
   add('GET', '/products', (c) => repo.listProducts(db, c.query.q || undefined))

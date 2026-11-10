@@ -1,7 +1,9 @@
 import { DEMO } from './env'
 import { useMutation, useQuery, useQueryClient, type QueryKey } from '@tanstack/react-query'
 import type {
+  CollectionItem,
   ComplianceWarning,
+  GrapeList,
   Dashboard,
   Harvest,
   NebihSearchHit,
@@ -53,6 +55,9 @@ export const useWork = (parcel_id?: number) =>
   useQuery({ queryKey: ['work', parcel_id ?? 'all'], queryFn: () => api<WorkEntry[]>(`/work${parcel_id ? `?parcel_id=${parcel_id}` : ''}`) })
 export const useHarvests = (parcel_id?: number) =>
   useQuery({ queryKey: ['harvests', parcel_id ?? 'all'], queryFn: () => api<Harvest[]>(`/harvests${parcel_id ? `?parcel_id=${parcel_id}` : ''}`) })
+export const useCollection = () => useQuery({ queryKey: ['collection'], queryFn: () => api<CollectionItem[]>('/collection') })
+export const useLists = () => useQuery({ queryKey: ['lists'], queryFn: () => api<GrapeList[]>('/lists') })
+export const useList = (id: number) => useQuery({ queryKey: ['lists', id], queryFn: () => api<GrapeList>(`/lists/${id}`), retry: false })
 export const useStock = () => useQuery({ queryKey: ['stock'], queryFn: () => api<any[]>('/stock') })
 export const useSettings = () => useQuery({ queryKey: ['settings'], queryFn: () => api<Record<string, string>>('/settings') })
 export const useNebihStatus = () =>

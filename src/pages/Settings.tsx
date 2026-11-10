@@ -1,8 +1,10 @@
-import { Download, Save } from 'lucide-react'
+import { Download, Save, UserRound } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { ME } from '../lib/mock'
 import { useState } from 'react'
 import { api, useNebihStatus, useSave, useSettings } from '../lib/api'
 import { DEMO } from '../lib/env'
-import { Button, Card, CardHeader, Field, Input, PageHeader, Spinner } from '../components/ui'
+import { Button, Card, CardHeader, Field, Input, PageHeader, Spinner, Textarea } from '../components/ui'
 
 async function downloadBackup() {
   const data = await api<unknown>('/backup')
@@ -46,6 +48,7 @@ export default function Settings() {
           </div>
         </Card>
         <div className="flex flex-col gap-6">
+          <ProfileCard data={data} />
           <Card>
             <CardHeader title="Adatmentés" subtitle="Teljes adatbázis letöltése JSON formátumban" />
             <div className="px-5 pb-5">
@@ -66,5 +69,50 @@ export default function Settings() {
         </div>
       </div>
     </>
+  )
+}
+
+const TOGGLES: [string, string, string][] = [
+  ['profile_listed', 'Megjelenek a gazdák listájában', 'A Gazdák oldalon és a térképen (település szintű pontossággal).'],
+  ['profile_messaging', 'Fogadok üzeneteket', 'Kikapcsolva a profilodon nem jelenik meg az „Üzenet küldése” gomb.'],
+  ['notify_messages', 'E-mail értesítés új üzenetről', ''],
+  ['notify_forum', 'E-mail értesítés fórumválaszról', 'Ha a követett témákba új hozzászólás érkezik.'],
+  ['notify_digest', 'Heti összefoglaló', 'Új fajták, cikkek és a permetezési napló esedékes teendői.'],
+]
+
+/** Profil és értesítések — a szoloink.hu „Beállítás” oldalának megfelelője (itt a gazdaprofil és a Gazdák oldal ebből töltődik). */
+function ProfileCard({ data }: { data: Record<string, string> }) {
+  const [f, setF] = useState<Record<string, string> | null>(null)
+  const v = f ?? data
+  const save = useSave((b: Record<string, string>) => api('/settings', { method: 'PUT', json: b }), [['settings']])
+  const set = (k: string, val: string) => setF({ ...v, [k]: val })
+  return (
+    <Card>
+      <CardHeader title="Profil és értesítések" subtitle="Ez látszik a gazdaprofilodon" icon={<UserRound className="size-5" />}
+        action={<Link to={`/gazda/${ME.id}`} className="text-xs font-medium text-vine-700 dark:text-vine-300">Profilom megtekintése →</Link>} />
+      <div className="grid gap-4 px-5 pb-5">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Megjelenített név"><Input value={v.profile_name ?? ''} onChange={(e) => set('profile_name', e.target.value)} /></Field>
+          <Field label="Település / kerület" hint="Utcát, házszámot nem tárolunk."><Input value={v.profile_city ?? ''} onChange={(e) => set('profile_city', e.target.value)} /></Field>
+        </div>
+        <Field label="Bemutatkozás"><Textarea value={v.profile_about ?? ''} onChange={(e) => set('profile_about', e.target.value)} /></Field>
+        <Field label="Elérhetőség" hint="Nyilvános — pl. „Üzenetben” vagy telefonszám."><Input value={v.profile_contact ?? ''} onChange={(e) => set('profile_contact', e.target.value)} /></Field>
+        <div className="flex flex-col gap-3">
+          {TOGGLES.map(([k, label, hint]) => (
+            <label key={k} className="flex items-start gap-3 cursor-pointer">
+              <input type="checkbox" className="mt-1 size-4 accent-[var(--color-vine-600)]" checked={v[k] === '1'} onChange={(e) => set(k, e.target.checked ? '1' : '0')} />
+              <span className="text-sm">
+                <span className="font-medium">{label}</span>
+                {hint && <span className="block text-xs text-muted">{hint}</span>}
+              </span>
+            </label>
+          ))}
+        </div>
+        <div className="flex items-center gap-3">
+          <Button icon={<Save className="size-4" />} loading={save.isPending} onClick={() => save.mutate(v, { onSuccess: () => setF(null) })}>Profil mentése</Button>
+          {save.isSuccess && !f && <span className="text-sm text-vine-700 dark:text-vine-300">Elmentve</span>}
+        </div>
+      </div>
+    </Card>
   )
 }

@@ -1,6 +1,6 @@
 import {
-  BookOpen, Boxes, FlaskConical, Grape, Hammer, HelpCircle, Home, LayoutDashboard, ListTree, Menu, MessageSquare, Moon, Plus, Search,
-  Settings, Sprout, SprayCan, Sun, Wheat, X,
+  BookOpen, Boxes, FlaskConical, Grape, Hammer, HelpCircle, Home, LayoutDashboard, ListChecks, ListTree, Mail, Map, Menu, MessageSquare, Moon, Plus, Search,
+  Settings, Sprout, SprayCan, Star, Sun, Users, Wheat, X,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
@@ -14,20 +14,26 @@ const EXPLORE: Item[] = [
   { to: '/', label: 'Főoldal', icon: Home, end: true },
   { to: '/kereses', label: 'Keresés', icon: Search },
   { to: '/szolok', label: 'Szőlők A–Z', icon: ListTree },
+  { to: '/gazdak', label: 'Gazdák', icon: Users },
   { to: '/cikkek', label: 'Cikkek', icon: BookOpen, badge: 'új' },
   { to: '/forum', label: 'Fórum', icon: MessageSquare, badge: '11' },
 ]
+const MINE: Item[] = [
+  { to: '/szoloim', label: 'Szőlőim', icon: Star },
+  { to: '/listaim', label: 'Listáim', icon: ListChecks },
+  { to: '/uzenetek', label: 'Üzenetek', icon: Mail, badge: '2' },
+]
 const GARDEN: Item[] = [
   { to: '/kertem', label: 'Áttekintés', icon: LayoutDashboard },
-  { to: '/szoloim', label: 'Szőlőim', icon: Sprout },
+  { to: '/ultetvenyek', label: 'Ültetvényeim', icon: Map, isNew: true },
   { to: '/permetezes', label: 'Permetezési napló', icon: SprayCan, isNew: true },
   { to: '/szerek', label: 'Szeradatbázis', icon: FlaskConical, isNew: true },
   { to: '/raktar', label: 'Raktár', icon: Boxes },
   { to: '/munkanaplo', label: 'Munkanapló', icon: Hammer },
   { to: '/szuret', label: 'Szüret', icon: Wheat },
 ]
-const MOBILE: Item[] = [EXPLORE[0], EXPLORE[1], GARDEN[2], GARDEN[1]]
-const ALL = [...EXPLORE, ...GARDEN, { to: '/beallitasok', label: 'Beállítások', icon: Settings }, { to: '/segitseg', label: 'Segítség', icon: HelpCircle }]
+const MOBILE: Item[] = [EXPLORE[0], EXPLORE[1], GARDEN[2], MINE[0]]
+const ALL = [...EXPLORE, ...MINE, ...GARDEN, { to: '/lista', label: 'Megosztott lista', icon: ListChecks }, { to: '/gazda', label: 'Gazda profil', icon: Users }, { to: '/beallitasok', label: 'Beállítások', icon: Settings }, { to: '/segitseg', label: 'Segítség', icon: HelpCircle }]
 
 function useTheme() {
   const [dark, setDark] = useState(() => {
@@ -98,7 +104,9 @@ function Sidebar({ onNav }: { onNav?: () => void }) {
       </Link>
       <div className="px-3 mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted">Felfedezés</div>
       <NavList items={EXPLORE} onNav={onNav} />
-      <div className="px-3 mt-5 mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted">Kertem</div>
+      <div className="px-3 mt-5 mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted">Saját</div>
+      <NavList items={MINE} onNav={onNav} />
+      <div className="px-3 mt-5 mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted">Gazdálkodás</div>
       <NavList items={GARDEN} onNav={onNav} />
       <div className="mt-auto pt-5 flex flex-col gap-1">
         <NavList items={ALL.slice(-2)} onNav={onNav} />
@@ -119,7 +127,7 @@ export default function Layout() {
     window.scrollTo(0, 0)
   }, [loc.pathname])
   const current = [...ALL].sort((a, b) => b.to.length - a.to.length).find((i) => (i.end ? loc.pathname === i.to : loc.pathname.startsWith(i.to)))
-  const title = loc.pathname.startsWith('/szolo/') ? 'Fajta adatlap' : current?.label ?? 'Szőlőink'
+  const title = loc.pathname.startsWith('/szolo/') ? 'Fajta adatlap' : loc.pathname.startsWith('/lista/') ? 'Megosztott lista' : current?.label ?? 'Szőlőink'
   const me = USERS[4]
 
   return (

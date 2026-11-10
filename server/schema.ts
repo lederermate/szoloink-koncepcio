@@ -139,6 +139,28 @@ export function migrate(db: Db) {
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
+    CREATE TABLE IF NOT EXISTS my_varieties (
+      variety_id INTEGER PRIMARY KEY REFERENCES varieties(id) ON DELETE CASCADE,
+      note TEXT,
+      added_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS grape_lists (
+      id INTEGER PRIMARY KEY,
+      name TEXT NOT NULL,
+      description TEXT,
+      public INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS grape_list_items (
+      list_id INTEGER NOT NULL REFERENCES grape_lists(id) ON DELETE CASCADE,
+      variety_id INTEGER NOT NULL REFERENCES varieties(id) ON DELETE CASCADE,
+      note TEXT,
+      position INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (list_id, variety_id)
+    );
+
     CREATE TABLE IF NOT EXISTS settings (
       key TEXT PRIMARY KEY,
       value TEXT
@@ -149,5 +171,7 @@ export function migrate(db: Db) {
   const pc = cols('products')
   if (!pc.includes('use_until')) db.exec('ALTER TABLE products ADD COLUMN use_until TEXT')
   if (!pc.includes('extra')) db.exec(`ALTER TABLE products ADD COLUMN extra TEXT NOT NULL DEFAULT '{}'`)
+  if (!cols('parcels').includes('plantings')) db.exec(`ALTER TABLE parcels ADD COLUMN plantings TEXT NOT NULL DEFAULT '[]'`)
+  if (!cols('harvests').includes('variety')) db.exec('ALTER TABLE harvests ADD COLUMN variety TEXT')
 }
 
