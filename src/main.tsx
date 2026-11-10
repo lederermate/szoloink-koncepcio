@@ -1,7 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, createHashRouter, RouterProvider } from 'react-router-dom'
+import { DEMO } from './lib/env'
 import './index.css'
 import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
@@ -28,7 +29,7 @@ try {
 
 const qc = new QueryClient({ defaultOptions: { queries: { staleTime: 15_000, refetchOnWindowFocus: false } } })
 
-const router = createBrowserRouter([
+const router = (DEMO ? createHashRouter : createBrowserRouter)([
   { path: '/permetezes/nyomtatas', element: <SprayPrint /> },
   {
     element: <Layout />,

@@ -1,5 +1,5 @@
 import { addDays, format, parseISO } from 'date-fns'
-import type { Db } from './db.ts'
+import type { Db } from './schema.ts'
 import { getProduct, listSprays, parcels as parcelRepo } from './repo.ts'
 import type {
   ComplianceWarning,

@@ -1,7 +1,16 @@
 import { Download, Save } from 'lucide-react'
 import { useState } from 'react'
 import { api, useNebihStatus, useSave, useSettings } from '../lib/api'
+import { DEMO } from '../lib/env'
 import { Button, Card, CardHeader, Field, Input, PageHeader, Spinner } from '../components/ui'
+
+async function downloadBackup() {
+  const data = await api<unknown>('/backup')
+  const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }))
+  const a = Object.assign(document.createElement('a'), { href: url, download: `szoloink-mentes-${new Date().toISOString().slice(0, 10)}.json` })
+  a.click()
+  URL.revokeObjectURL(url)
+}
 
 const FIELDS: [string, string, string?][] = [
   ['farm_name', 'Gazdálkodó / pincészet neve'],
@@ -40,7 +49,10 @@ export default function Settings() {
           <Card>
             <CardHeader title="Adatmentés" subtitle="Teljes adatbázis letöltése JSON formátumban" />
             <div className="px-5 pb-5">
-              <a href="/api/backup"><Button variant="secondary" icon={<Download className="size-4" />}>Mentés letöltése</Button></a>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="secondary" icon={<Download className="size-4" />} onClick={downloadBackup}>Mentés letöltése</Button>
+                {DEMO && <Button variant="ghost" onClick={() => confirm('Visszaállítja a demó kezdeti adatait? A saját módosítások elvesznek.') && import('../demo/backend').then((m) => m.resetDemo())}>Demó adatok visszaállítása</Button>}
+              </div>
             </div>
           </Card>
           <Card>
@@ -48,7 +60,7 @@ export default function Settings() {
             <dl className="px-5 pb-5 grid gap-2 text-sm">
               <div className="flex justify-between gap-4"><dt className="text-muted">Forrás</dt><dd className="text-right break-all">{nebih?.base_url}</dd></div>
               <div className="flex justify-between gap-4"><dt className="text-muted">Állapot</dt><dd>{nebih?.reachable ? 'elérhető' : `nem elérhető (${nebih?.error ?? '—'})`}</dd></div>
-              <p className="text-xs text-muted mt-2">Az alap URL a szerveren a <code>NEBIH_BASE_URL</code> környezeti változóval módosítható. A tömeges frissítés parancssorból is futtatható: <code>npm run nebih:sync -- resync</code>.</p>
+              <p className="text-xs text-muted mt-2">Az alap URL a szerveren a <code>NEBIH_BASE_URL</code> környezeti változóval módosítható. A tömeges frissítés parancssorból is futtatható: <code>npm run nebih -- resync</code>.</p>
             </dl>
           </Card>
         </div>

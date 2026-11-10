@@ -8,8 +8,9 @@
     "dev:api": "NODE_USE_ENV_PROXY=1 tsx watch --no-warnings server/index.ts",
     "dev:web": "vite",
     "build": "tsc -b && vite build",
+    "build:demo": "VITE_DEMO=1 vite build --outDir dist-demo",
     "start": "NODE_ENV=production NODE_USE_ENV_PROXY=1 tsx --no-warnings server/index.ts",
-    "seed": "tsx --no-warnings server/seed.ts",
+    "seed": "tsx --no-warnings server/seed-cli.ts",
     "nebih": "NODE_USE_ENV_PROXY=1 tsx --no-warnings server/nebih/cli.ts",
     "test": "vitest run",
     "typecheck": "tsc -b"
@@ -25,6 +26,7 @@
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-router-dom": "^7.18.5",
+    "sql.js": "^1.16.0",
     "tailwind-merge": "^3.7.0",
     "zod": "^4.6.7"
   },
@@ -34,6 +36,7 @@
     "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "@types/sql.js": "^1.4.11",
     "@vitejs/plugin-react": "^6.3.0",
     "concurrently": "^10.0.7",
     "tailwindcss": "^4.3.5",

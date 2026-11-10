@@ -2,6 +2,7 @@ import { Plus, Printer, SprayCan } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useParcels, useProducts, useSprays } from '../lib/api'
+import { appHref } from '../lib/env'
 import { d, n } from '../lib/format'
 import { Badge, Button, Card, ColorDot, Empty, PageHeader, Select, Spinner } from '../components/ui'
 
@@ -25,7 +26,7 @@ export default function Sprays() {
         subtitle="Növényvédő szeres kezelések nyilvántartása"
         actions={
           <>
-            <Button variant="secondary" icon={<Printer className="size-4" />} onClick={() => window.open(`/permetezes/nyomtatas?year=${year}${parcel ? `&parcel=${parcel}` : ''}`, '_blank')}>
+            <Button variant="secondary" icon={<Printer className="size-4" />} onClick={() => window.open(appHref(`/permetezes/nyomtatas?year=${year}${parcel ? `&parcel=${parcel}` : ''}`), '_blank')}>
               Nyomtatás / PDF
             </Button>
             <Link to="/permetezes/uj"><Button icon={<Plus className="size-4" />}>Új permetezés</Button></Link>

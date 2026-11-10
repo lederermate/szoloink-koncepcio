@@ -1,9 +1,7 @@
 // Bemutató adatok — kitalált ültetvények és KITALÁLT „DEMO” szerek.
 // A demó szerek NEM valós NÉBIH engedélyokiratok; a Szeradatbázis oldalon egy
 // kattintással törölhetők, és a valós szereket a NÉBIH-ből kell importálni.
-import { fileURLToPath } from 'node:url'
-import type { Db } from './db.ts'
-import { openDb } from './db.ts'
+import type { Db } from './schema.ts'
 import { addStock, harvests, parcels, saveProduct, saveSpray, setSettings, work } from './repo.ts'
 import type { ProductUse } from '../shared/types.ts'
 
@@ -77,9 +75,4 @@ export function seed(db: Db) {
   H.create({ parcel_id: p3.id, date: `${y}-09-25`, quantity_kg: 6900, must_degree: 21.0, buyer: 'Saját feldolgozás', notes: null })
 
   setSettings(db, { farm_name: 'Bemutató Pincészet', operator_name: op.operator_name, operator_license: op.operator_license, machine: op.machine })
-}
-
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const db = openDb()
-  console.log(seedIfEmpty(db) ? 'Bemutató adatok betöltve.' : 'Az adatbázis nem üres, kihagyva.')
 }

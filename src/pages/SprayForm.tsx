@@ -125,8 +125,13 @@ export default function SprayForm() {
     const p = products.find((x) => x.id === it.product_id)
     const u = matchUse(p, it.pest)
     const uses = grapeUses(p)
-    const phi = u?.phi_days ?? (uses.length ? Math.max(...uses.map((x) => x.phi_days ?? 0)) : null)
-    const rei = u?.rei_days ?? (uses.length ? Math.max(...uses.map((x) => x.rei_days ?? 0)) : null)
+    // illeszkedő felhasználásnál annak értéke; különben a legszigorúbb ismert érték (ismeretlen → nincs adat)
+    const strictest = (k: 'phi_days' | 'rei_days') => {
+      const vals = uses.map((x) => x[k]).filter((v): v is number => v != null)
+      return vals.length ? Math.max(...vals) : null
+    }
+    const phi = u ? u.phi_days : strictest('phi_days')
+    const rei = u ? u.rei_days : strictest('rei_days')
     return { phi, rei }
   })
   const maxPhi = Math.max(0, ...waits.map((w) => w.phi ?? 0))

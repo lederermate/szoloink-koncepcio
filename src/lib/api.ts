@@ -1,3 +1,4 @@
+import { DEMO } from './env'
 import { useMutation, useQuery, useQueryClient, type QueryKey } from '@tanstack/react-query'
 import type {
   ComplianceWarning,
@@ -20,6 +21,12 @@ export class ApiError extends Error {
 
 export async function api<T>(path: string, init: RequestInit & { json?: unknown } = {}): Promise<T> {
   const { json, ...rest } = init
+  if (DEMO) {
+    const { demoRequest } = await import('../demo/backend')
+    const res = await demoRequest((rest.method ?? 'GET').toUpperCase(), path, json === undefined ? undefined : JSON.parse(JSON.stringify(json)))
+    if (res.status >= 400) throw new ApiError(res.status, res.body?.error ?? `Hiba (${res.status})`, res.body?.warnings)
+    return res.body as T
+  }
   const res = await fetch(`/api${path}`, {
     ...rest,
     headers: json !== undefined ? { 'Content-Type': 'application/json', ...(rest.headers ?? {}) } : rest.headers,

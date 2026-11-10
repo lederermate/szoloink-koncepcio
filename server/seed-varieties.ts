@@ -1,6 +1,6 @@
 // MINTA fajtakatalógus a koncepcióhoz. A leírások és érési idők tájékoztató jellegű, saját
 // összefoglalók — a valós rendszerben a szoloink.hu közösségi adatbázisa szolgáltatná őket.
-import type { Db } from './db.ts'
+import type { Db } from './schema.ts'
 import type { BerryColor } from '../shared/types.ts'
 
 type V = [name: string, other: string | null, color: BerryColor, from: number, to: number, tags: string[], pop: number, desc: string]

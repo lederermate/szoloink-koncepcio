@@ -9,7 +9,7 @@
  * Proxy mögött a Node beépített fetch-je csak NODE_USE_ENV_PROXY=1 mellett használja a
  * HTTPS_PROXY-t (Node ≥ 22.21) — az npm scriptek ezt beállítják.
  */
-import type { Db } from '../db.ts'
+import type { Db } from '../schema.ts'
 import { saveProduct } from '../repo.ts'
 import type { NebihSearchHit, NebihStatus, Product } from '../../shared/types.ts'
 import { FIELD, formFields, parsePermit, parseSearchResults, type ParsedPermit, type SearchPage } from './parser.ts'
@@ -19,7 +19,9 @@ export const SEARCH_URL = `${NEBIH_BASE}/Engedelykereso/kereso`
 const UA = 'Mozilla/5.0 (compatible; Szolonaplo/0.2)'
 const TIMEOUT_MS = 30_000
 
-export class NebihError extends Error {}
+export class NebihError extends Error {
+  override name = 'NebihError'
+}
 
 /** Egy NÉBIH-munkamenet: sütik + az utolsó lap (ViewState) megőrzése. */
 class Session {

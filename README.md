@@ -7,6 +7,24 @@ modern megjelenéssel (mintaadatokkal), kiegészítve egy **működő permetezé
 > A szoloink.hu tartalmát (leírások, fotók, fórum) nem másoltuk át: a fajtaleírások saját
 > mintaszövegek, a fotók helyén generált fürt-illusztráció, a közösségi részek kitalált mintaadatok.
 
+## Online demó
+
+**https://lederermate.github.io/szoloink-koncepcio/**
+
+Szerver nélkül, a böngészőben fut: ugyanaz az útvonaltábla és üzleti logika (`server/routes.ts`,
+`server/logic.ts`), mint a szerveres változatban, csak az adatbázis SQLite WebAssembly-ben (sql.js),
+és a böngésző localStorage-ában marad meg (Beállítások → „Demó adatok visszaállítása”).
+A demóban az **élő NÉBIH-keresés nem elérhető** (a NÉBIH oldala nem engedi a böngészőből való
+lekérést) — helyette 14 előre importált, valós NÉBIH-szer van benne.
+
+Demó építése és közzététele:
+
+```bash
+npm run build:demo          # → dist-demo/ (base: /szoloink-koncepcio/, hash-alapú útvonalak)
+```
+
+A `dist-demo` tartalma a `gh-pages` ágra kerül; GitHub → Settings → Pages → „Deploy from a branch” → `gh-pages` / `(root)`.
+
 ## Mi működik és mi minta?
 
 | Terület | Állapot |

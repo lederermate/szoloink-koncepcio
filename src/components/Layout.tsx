@@ -5,6 +5,7 @@ import {
 import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useNebihStatus } from '../lib/api'
+import { DEMO } from '../lib/env'
 import { USERS } from '../lib/mock'
 import { cx } from './ui'
 
@@ -103,7 +104,7 @@ function Sidebar({ onNav }: { onNav?: () => void }) {
         <NavList items={ALL.slice(-2)} onNav={onNav} />
         <Link to="/szerek?tab=nebih" onClick={onNav} className="mt-2 flex items-center gap-2 px-3 text-xs text-muted hover:text-fg">
           <span className={cx('size-2 rounded-full', nebih?.reachable ? 'bg-leaf-600' : 'bg-amber-500')} />
-          NÉBIH {nebih?.reachable ? 'kapcsolódva' : 'nem elérhető'}
+          {DEMO ? 'NÉBIH: előre importált adatok' : `NÉBIH ${nebih?.reachable ? 'kapcsolódva' : 'nem elérhető'}`}
         </Link>
       </div>
     </>
@@ -114,7 +115,9 @@ export default function Layout() {
   const [dark, setDark] = useTheme()
   const [drawer, setDrawer] = useState(false)
   const loc = useLocation()
-  useEffect(() => window.scrollTo(0, 0), [loc.pathname])
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [loc.pathname])
   const current = [...ALL].sort((a, b) => b.to.length - a.to.length).find((i) => (i.end ? loc.pathname === i.to : loc.pathname.startsWith(i.to)))
   const title = loc.pathname.startsWith('/szolo/') ? 'Fajta adatlap' : current?.label ?? 'Szőlőink'
   const me = USERS[4]
@@ -139,7 +142,7 @@ export default function Layout() {
       <header className="no-print sticky top-0 z-30 flex items-center gap-3 border-b border-line bg-surface/80 backdrop-blur-md px-4 sm:px-6 lg:px-8 h-14 lg:h-16">
         <button onClick={() => setDrawer(true)} className="lg:hidden rounded-lg p-1.5 -ml-1.5 text-muted" aria-label="Menü"><Menu className="size-5" /></button>
         <h2 className="font-semibold tracking-tight truncate">{title}</h2>
-        <span className="hidden sm:inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800 dark:bg-amber-950 dark:text-amber-300">koncepció</span>
+        <span className="hidden sm:inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800 dark:bg-amber-950 dark:text-amber-300">{DEMO ? 'koncepció · demó' : 'koncepció'}</span>
         <div className="ml-auto flex items-center gap-1">
           <Link to="/kereses" className="hidden sm:flex items-center gap-2 h-9 w-56 rounded-xl border border-line bg-surface-2 px-3 text-sm text-muted hover:text-fg">
             <Search className="size-4" /> Fajta keresése…

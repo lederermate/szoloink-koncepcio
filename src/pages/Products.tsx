@@ -1,6 +1,7 @@
 import { CloudOff, Database, ExternalLink, FlaskConical, Import, Pencil, Plus, RefreshCw, Search, Trash2, Upload, Wifi } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { DEMO } from '../lib/env'
 import { api, useNebihSearch, useNebihStatus, useProducts, useSave } from '../lib/api'
 import { DOSE_UNITS, PESTS } from '../lib/constants'
 import { d, n } from '../lib/format'
@@ -320,11 +321,11 @@ function NebihSearch() {
           {st?.reachable ? <Wifi className="size-5" /> : <CloudOff className="size-5" />}
         </div>
         <div className="flex-1 text-sm">
-          <div className="font-medium">{st?.reachable ? 'Kapcsolódva a NÉBIH Növényvédő szer Engedélykeresőhöz' : 'A NÉBIH Engedélykereső jelenleg nem érhető el a szerverről'}</div>
+          <div className="font-medium">{DEMO ? 'Böngészős demó — az élő NÉBIH-keresés a szerveres változatban működik' : st?.reachable ? 'Kapcsolódva a NÉBIH Növényvédő szer Engedélykeresőhöz' : 'A NÉBIH Engedélykereső jelenleg nem érhető el a szerverről'}</div>
           <div className="text-muted text-xs mt-0.5 break-all">
             {st?.base_url}
-            {st?.error && ` · ${st.error}`}
-            {!st?.reachable && ' — ellenőrizze a szerver internet-hozzáférését (tűzfal / proxy).'}
+            {st?.error && !DEMO && ` · ${st.error}`}
+            {DEMO ? ' — a „Saját adatbázis” fülön 14 előre importált, valós NÉBIH-szer van (engedélyszám, kultúrák, ÉVI, PDF-ek).' : !st?.reachable && ' — ellenőrizze a szerver internet-hozzáférését (tűzfal / proxy).'}
           </div>
         </div>
         <Button variant="secondary" size="sm" loading={isFetching} icon={<RefreshCw className="size-3.5" />} onClick={() => api('/nebih/status?force=1').then(() => refetch())}>Újra</Button>
